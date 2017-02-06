@@ -7,3 +7,5 @@ Makefile
 
 _train.log
 dqn
+
+.*.swp

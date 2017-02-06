@@ -43,7 +43,7 @@ double PlayOneEpisode(
   std::deque<dqn::FrameDataSp> past_frames;
   auto total_score = 0.0;
   for (auto frame = 0; !ale.gameOver(); ++frame) {
-    std::cout << "frame: " << frame << std::endl;
+    //std::cout << "frame: " << frame << std::endl;
     const auto current_frame = dqn::PreprocessScreen(ale.getScreen());
     if (FLAGS_show_frame) {
       std::cout << dqn::DrawFrame(*current_frame) << std::endl;
