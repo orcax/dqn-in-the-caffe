@@ -11,11 +11,19 @@ Updates
 How to Run
 --
 - Compile xitari
+```
 cd xitari
 make
+```
+
 - Compile caffe
+```
 cd caffe
 make all
+```
+
 - Compile dqn
+```
 cmake .
 make
+```
