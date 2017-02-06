@@ -1,6 +1,6 @@
-layers {
+layer {
   name: "frames_input_layer"
-  type: MEMORY_DATA
+  type: "MemoryData"
   top: "frames"
   top: "dummy1"
   memory_data_param {
@@ -10,10 +10,10 @@ layers {
     width: 84
   }
 }
-layers {
+layer {
   name: "target_input_layer"
-  type: MEMORY_DATA
-  top: "target"
+  type: "MemoryData"
+  top: "target_raw"
   top: "dummy2"
   memory_data_param {
     batch_size: 32
@@ -22,10 +22,10 @@ layers {
     width: 1
   }
 }
-layers {
+layer {
   name: "filter_input_layer"
-  type: MEMORY_DATA
-  top: "filter"
+  type: "MemoryData"
+  top: "filter_raw"
   top: "dummy3"
   memory_data_param {
     batch_size: 32
@@ -34,16 +34,36 @@ layers {
     width: 1
   }
 }
-layers {
+layer {
+  name: "target"
+  type: "Flatten"
+  bottom: "target_raw"
+  top: "target"
+  flatten_param {
+    axis: 1
+    end_axis: 3
+  }
+}
+layer {
+  name: "filter"
+  type: "Flatten"
+  bottom: "filter_raw"
+  top: "filter"
+  flatten_param {
+    axis: 1
+    end_axis: 3
+  }
+}
+layer {
   name: "silence_layer"
-  type: SILENCE
+  type: "Silence"
   bottom: "dummy1"
   bottom: "dummy2"
   bottom: "dummy3"
 }
-layers {
+layer {
   name: "conv1_layer"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "frames"
   top: "conv1"
   convolution_param {
@@ -56,18 +76,18 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "conv1_relu_layer"
-  type: RELU
+  type: "ReLU"
   bottom: "conv1"
   top: "conv1"
   relu_param {
     negative_slope: 0.01
   }
 }
-layers {
+layer {
   name: "conv2_layer"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "conv1"
   top: "conv2"
   convolution_param {
@@ -80,18 +100,18 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "conv2_relu_layer"
-  type: RELU
+  type: "ReLU"
   bottom: "conv2"
   top: "conv2"
   relu_param {
     negative_slope: 0.01
   }
 }
-layers {
+layer {
   name: "ip1_layer"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "conv2"
   top: "ip1"
   inner_product_param {
@@ -102,18 +122,18 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "ip1_relu_layer"
-  type: RELU
+  type: "ReLU"
   bottom: "ip1"
   top: "ip1"
   relu_param {
     negative_slope: 0.01
   }
 }
-layers {
+layer {
   name: "ip2_layer"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "ip1"
   top: "q_values"
   inner_product_param {
@@ -124,9 +144,9 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "eltwise_layer"
-  type: ELTWISE
+  type: "Eltwise"
   bottom: "q_values"
   bottom: "filter"
   top: "filtered_q_values"
@@ -134,9 +154,9 @@ layers {
     operation: PROD
   }
 }
-layers {
+layer {
   name: "loss"
-  type: EUCLIDEAN_LOSS
+  type: "EuclideanLoss"
   bottom: "filtered_q_values"
   bottom: "target"
   top: "loss"

@@ -6,10 +6,12 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <ale_interface.hpp>
 #include <caffe/caffe.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/optional.hpp>
+#include "ale_interface.hpp"
+
+using namespace ale;
 
 namespace dqn {
 

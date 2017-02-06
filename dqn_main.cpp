@@ -1,14 +1,16 @@
 #include <cmath>
 #include <iostream>
-#include <ale_interface.hpp>
+#include "ale_interface.hpp"
 #include <glog/logging.h>
 #include <gflags/gflags.h>
 #include "prettyprint.hpp"
 #include "dqn.hpp"
 
-DEFINE_bool(gpu, false, "Use GPU to brew Caffe");
+using namespace ale;
+
+DEFINE_bool(gpu, true, "Use GPU to brew Caffe");
 DEFINE_bool(gui, false, "Open a GUI window");
-DEFINE_string(rom, "breakout.bin", "Atari 2600 ROM to play");
+DEFINE_string(rom, "roms/breakout.bin", "Atari 2600 ROM to play");
 DEFINE_string(solver, "dqn_solver.prototxt", "Solver parameter file (*.prototxt)");
 DEFINE_int32(memory, 500000, "Capacity of replay memory");
 DEFINE_int32(explore, 1000000, "Number of iterations needed for epsilon to reach 0.1");
@@ -37,10 +39,10 @@ double PlayOneEpisode(
     dqn::DQN& dqn,
     const double epsilon,
     const bool update) {
-  assert(!ale.game_over());
+  assert(!ale.gameOver());
   std::deque<dqn::FrameDataSp> past_frames;
   auto total_score = 0.0;
-  for (auto frame = 0; !ale.game_over(); ++frame) {
+  for (auto frame = 0; !ale.gameOver(); ++frame) {
     std::cout << "frame: " << frame << std::endl;
     const auto current_frame = dqn::PreprocessScreen(ale.getScreen());
     if (FLAGS_show_frame) {
@@ -49,7 +51,7 @@ double PlayOneEpisode(
     past_frames.push_back(current_frame);
     if (past_frames.size() < dqn::kInputFrameCount) {
       // If there are not past frames enough for DQN input, just select NOOP
-      for (auto i = 0; i < FLAGS_skip_frame + 1 && !ale.game_over(); ++i) {
+      for (auto i = 0; i < FLAGS_skip_frame + 1 && !ale.gameOver(); ++i) {
         total_score += ale.act(PLAYER_A_NOOP);
       }
     } else {
@@ -60,7 +62,7 @@ double PlayOneEpisode(
       std::copy(past_frames.begin(), past_frames.end(), input_frames.begin());
       const auto action = dqn.SelectAction(input_frames, epsilon);
       auto immediate_score = 0.0;
-      for (auto i = 0; i < FLAGS_skip_frame + 1 && !ale.game_over(); ++i) {
+      for (auto i = 0; i < FLAGS_skip_frame + 1 && !ale.gameOver(); ++i) {
         // Last action is repeated on skipped frames
         immediate_score += ale.act(action);
       }
@@ -73,7 +75,7 @@ double PlayOneEpisode(
               immediate_score /= std::abs(immediate_score);
       if (update) {
         // Add the current transition to replay memory
-        const auto transition = ale.game_over() ?
+        const auto transition = ale.gameOver() ?
             dqn::Transition(input_frames, action, reward, boost::none) :
             dqn::Transition(
                 input_frames,
@@ -88,7 +90,7 @@ double PlayOneEpisode(
       }
     }
   }
-  ale.reset_game();
+  ale.resetGame();
   return total_score;
 }
 
@@ -100,14 +102,13 @@ int main(int argc, char** argv) {
 
   if (FLAGS_gpu) {
     caffe::Caffe::set_mode(caffe::Caffe::GPU);
+    caffe::Caffe::SetDevice(0);
   } else {
     caffe::Caffe::set_mode(caffe::Caffe::CPU);
   }
 
-  ALEInterface ale(FLAGS_gui);
-
   // Load the ROM file
-  ale.loadROM(FLAGS_rom);
+  ALEInterface ale(FLAGS_rom);
 
   // Get the vector of legal actions
   const auto legal_actions = ale.getMinimalActionSet();

@@ -1,2 +1,9 @@
-/dqn
-/Makefile
+
+dqn
+CMakeCache.txt
+/CMakeFiles
+cmake_install.cmake
+Makefile
+
+_train.log
+dqn

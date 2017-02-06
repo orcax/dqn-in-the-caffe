@@ -1,0 +1,7 @@
+ale
+CMakefiles/
+CMakeCache.txt
+cmake_install.cmake
+libxitari.a
+libxitari.so
+Makefile
