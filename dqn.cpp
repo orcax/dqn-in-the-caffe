@@ -159,12 +159,13 @@ FrameDataSp PreprocessScreen(const ALEScreen& raw_screen) {
           } else if (y == last_y) {
             y_ratio_in_resulting_pixel = y_ratio * (i + 1) - y;
           }
-          assert(
-              y_ratio_in_resulting_pixel >= 0.0 &&
-              y_ratio_in_resulting_pixel <= 1.0);
-          const auto grayscale =
-              PixelToGrayscale(
-                  raw_pixels[static_cast<int>(y * kRawFrameWidth + x)]);
+          assert( y_ratio_in_resulting_pixel >= 0.0 && y_ratio_in_resulting_pixel <= 1.0);
+
+          // [ERROR] segmentation error
+          int idx = static_cast<int>(y * kRawFrameWidth + x);
+          if(idx >= raw_pixels.size()) idx = raw_pixels.size() - 1;
+          const auto grayscale = PixelToGrayscale(raw_pixels[idx]);
+
           resulting_color +=
               (x_ratio_in_resulting_pixel / x_ratio) *
               (y_ratio_in_resulting_pixel / y_ratio) * grayscale;
@@ -320,7 +321,7 @@ std::vector<std::pair<Action, float>> DQN::SelectActionGreedily(
         q_values.begin(),
         action_evaluator);
     if (last_frames_batch.size() == 1) {
-      std::cout << PrintQValues(q_values, legal_actions_);
+      //std::cout << PrintQValues(q_values, legal_actions_);
     }
 
     // Select the action with the maximum Q value

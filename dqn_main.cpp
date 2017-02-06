@@ -34,11 +34,7 @@ double CalculateEpsilon(const int iter) {
 /**
  * Play one episode and return the total score
  */
-double PlayOneEpisode(
-    ALEInterface& ale,
-    dqn::DQN& dqn,
-    const double epsilon,
-    const bool update) {
+double PlayOneEpisode( ALEInterface& ale, dqn::DQN& dqn, const double epsilon, const bool update) {
   assert(!ale.gameOver());
   std::deque<dqn::FrameDataSp> past_frames;
   auto total_score = 0.0;
@@ -139,7 +135,7 @@ int main(int argc, char** argv) {
     std::cout << "episode: " << episode << std::endl;
     const auto epsilon = CalculateEpsilon(dqn.current_iteration());
     PlayOneEpisode(ale, dqn, epsilon, true);
-    if (dqn.current_iteration() % 10 == 0) {
+    if (dqn.current_iteration() % 100000 == 0) {
       // After every 10 episodes, evaluate the current strength
       const auto eval_score = PlayOneEpisode(ale, dqn, 0.05, false);
       std::cout << "evaluation score: " << eval_score << std::endl;
