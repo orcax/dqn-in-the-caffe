@@ -13,7 +13,7 @@ layer {
 layer {
   name: "target_input_layer"
   type: "MemoryData"
-  top: "target_raw"
+  top: "target"
   top: "dummy2"
   memory_data_param {
     batch_size: 32
@@ -25,7 +25,7 @@ layer {
 layer {
   name: "filter_input_layer"
   type: "MemoryData"
-  top: "filter_raw"
+  top: "filter"
   top: "dummy3"
   memory_data_param {
     batch_size: 32
@@ -35,20 +35,20 @@ layer {
   }
 }
 layer {
-  name: "target"
+  name: "target_flat"
   type: "Flatten"
-  bottom: "target_raw"
-  top: "target"
+  bottom: "target"
+  top: "target_flat"
   flatten_param {
     axis: 1
     end_axis: 3
   }
 }
 layer {
-  name: "filter"
+  name: "filter_flat"
   type: "Flatten"
-  bottom: "filter_raw"
-  top: "filter"
+  bottom: "filter"
+  top: "filter_flat"
   flatten_param {
     axis: 1
     end_axis: 3
@@ -148,7 +148,7 @@ layer {
   name: "eltwise_layer"
   type: "Eltwise"
   bottom: "q_values"
-  bottom: "filter"
+  bottom: "filter_flat"
   top: "filtered_q_values"
   eltwise_param {
     operation: PROD
@@ -158,6 +158,6 @@ layer {
   name: "loss"
   type: "EuclideanLoss"
   bottom: "filtered_q_values"
-  bottom: "target"
+  bottom: "target_flat"
   top: "loss"
 }

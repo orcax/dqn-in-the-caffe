@@ -87,12 +87,11 @@ private:
   using MemoryDataLayerSp = boost::shared_ptr<caffe::MemoryDataLayer<float>>;
 
   std::pair<Action, float> SelectActionGreedily(const InputFrames& last_frames);
-  std::vector<std::pair<Action, float>> SelectActionGreedily(
-      const std::vector<InputFrames>& last_frames);
-  void InputDataIntoLayers(
-      const FramesLayerInputData& frames_data,
-      const TargetLayerInputData& target_data,
-      const FilterLayerInputData& filter_data);
+
+  std::vector<std::pair<Action, float>> SelectActionGreedily(const std::vector<InputFrames>& last_frames);
+
+  void InputDataIntoLayers(const FramesLayerInputData& frames_data, 
+      const TargetLayerInputData& target_data, const FilterLayerInputData& filter_data);
 
   const ActionVect legal_actions_;
   const std::string solver_param_;
