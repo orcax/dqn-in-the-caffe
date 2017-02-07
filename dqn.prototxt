@@ -35,26 +35,6 @@ layer {
   }
 }
 layer {
-  name: "target_flat"
-  type: "Flatten"
-  bottom: "target"
-  top: "target_flat"
-  flatten_param {
-    axis: 1
-    end_axis: 3
-  }
-}
-layer {
-  name: "filter_flat"
-  type: "Flatten"
-  bottom: "filter"
-  top: "filter_flat"
-  flatten_param {
-    axis: 1
-    end_axis: 3
-  }
-}
-layer {
   name: "silence_layer"
   type: "Silence"
   bottom: "dummy1"
@@ -67,13 +47,12 @@ layer {
   bottom: "frames"
   top: "conv1"
   convolution_param {
-    num_output: 16
+    num_output: 32
     kernel_size: 8
     stride: 4
     weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
+      type: "xavier"
+    } 
   }
 }
 layer {
@@ -91,12 +70,11 @@ layer {
   bottom: "conv1"
   top: "conv2"
   convolution_param {
-    num_output: 32
+    num_output: 64
     kernel_size: 4
     stride: 2
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
   }
 }
@@ -110,15 +88,37 @@ layer {
   }
 }
 layer {
+  name: "conv3_layer"
+  type: "Convolution"
+  bottom: "conv2"
+  top: "conv3"
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+  }
+}
+layer {
+  name: "conv3_relu_layer"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
+  relu_param {
+    negative_slope: 0.01
+  }
+}
+layer {
   name: "ip1_layer"
   type: "InnerProduct"
-  bottom: "conv2"
+  bottom: "conv3"
   top: "ip1"
   inner_product_param {
-    num_output: 256
+    num_output: 512
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
   }
 }
@@ -135,20 +135,33 @@ layer {
   name: "ip2_layer"
   type: "InnerProduct"
   bottom: "ip1"
-  top: "q_values"
+  top: "ip2"
   inner_product_param {
     num_output: 18
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
+  }
+}
+layer {
+  name: "ip2_reshape"
+  type: "Reshape"
+  bottom: "ip2"
+  top: "q_values"
+  reshape_param {
+    shape {
+      dim: -1
+      dim: 18
+      dim: 1
+      dim: 1
+    }   
   }
 }
 layer {
   name: "eltwise_layer"
   type: "Eltwise"
   bottom: "q_values"
-  bottom: "filter_flat"
+  bottom: "filter"
   top: "filtered_q_values"
   eltwise_param {
     operation: PROD
@@ -158,6 +171,6 @@ layer {
   name: "loss"
   type: "EuclideanLoss"
   bottom: "filtered_q_values"
-  bottom: "target_flat"
+  bottom: "target"
   top: "loss"
 }

@@ -6,7 +6,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 #include <glog/logging.h>
-#include "prettyprint.hpp"
+//#include "prettyprint.hpp"
 
 namespace dqn {
 
@@ -243,9 +243,7 @@ void DQN::Initialize() {
   std::fill(dummy_input_data_.begin(), dummy_input_data_.end(), 0.0);
 
   // Cache pointers to input layers
-  frames_input_layer_ =
-      boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float>>(
-          net_->layer_by_name("frames_input_layer"));
+  frames_input_layer_ = boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float>>(net_->layer_by_name("frames_input_layer"));
   assert(frames_input_layer_);
   assert(HasBlobSize(
       *net_->blob_by_name("frames"),
@@ -253,18 +251,14 @@ void DQN::Initialize() {
       kInputFrameCount,
       kCroppedFrameSize,
       kCroppedFrameSize));
-  target_input_layer_ =
-      boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float>>(
-          net_->layer_by_name("target_input_layer"));
+
+  target_input_layer_ = boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float>>(net_->layer_by_name("target_input_layer"));
   assert(target_input_layer_);
-  assert(HasBlobSize(
-      *net_->blob_by_name("target"), kMinibatchSize, kOutputCount, 1, 1));
-  filter_input_layer_ =
-      boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float>>(
-          net_->layer_by_name("filter_input_layer"));
+  assert(HasBlobSize(*net_->blob_by_name("target"), kMinibatchSize, kOutputCount, 1, 1));
+
+  filter_input_layer_ = boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float>>(net_->layer_by_name("filter_input_layer"));
   assert(filter_input_layer_);
-  assert(HasBlobSize(
-      *net_->blob_by_name("filter"), kMinibatchSize, kOutputCount, 1, 1));
+  assert(HasBlobSize(*net_->blob_by_name("filter"), kMinibatchSize, kOutputCount, 1, 1));
 }
 
 Action DQN::SelectAction(const InputFrames& last_frames, const double epsilon) {
@@ -303,7 +297,7 @@ std::vector<std::pair<Action, float>> DQN::SelectActionGreedily(
     }
   }
   InputDataIntoLayers(frames_input, dummy_input_data_, dummy_input_data_);
-  net_->ForwardPrefilled(nullptr);
+  net_->ForwardPrefilled();
 
   std::vector<std::pair<Action, float>> results;
   results.reserve(last_frames_batch.size());
@@ -348,9 +342,7 @@ void DQN::Update() {
   std::vector<int> transitions;
   transitions.reserve(kMinibatchSize);
   for (auto i = 0; i < kMinibatchSize; ++i) {
-    const auto random_transition_idx =
-        std::uniform_int_distribution<int>(0, replay_memory_.size() - 1)(
-            random_engine);
+    const auto random_transition_idx = std::uniform_int_distribution<int>(0, replay_memory_.size() - 1)(random_engine);
     transitions.push_back(random_transition_idx);
   }
 
@@ -370,8 +362,7 @@ void DQN::Update() {
     target_last_frames[kInputFrameCount - 1] = std::get<3>(transition).get();
     target_last_frames_batch.push_back(target_last_frames);
   }
-  const auto actions_and_values =
-      SelectActionGreedily(target_last_frames_batch);
+  const auto actions_and_values = SelectActionGreedily(target_last_frames_batch);
 
   FramesLayerInputData frames_input;
   TargetLayerInputData target_input;
@@ -388,30 +379,33 @@ void DQN::Update() {
     const auto target = std::get<3>(transition) ?
           reward + gamma_ * actions_and_values[target_value_idx++].second :
           reward;
+    //std::cout << target << " ";
     assert(!std::isnan(target));
     target_input[i * kOutputCount + static_cast<int>(action)] = target;
     filter_input[i * kOutputCount + static_cast<int>(action)] = 1;
-    VLOG(1) << "filter:" << action_to_string(action) << " target:" << target;
+
+    //VLOG(1) << "filter:" << action_to_string(action) << " target:" << target;
+    //std::cout << "(" << actions_and_values[i].second << "," << reward << "," << target << ") ";
+
     for (auto j = 0; j < kInputFrameCount; ++j) {
       const auto& frame_data = std::get<0>(transition)[j];
-      std::copy(
-          frame_data->begin(),
-          frame_data->end(),
-          frames_input.begin() + i * kInputDataSize +
-              j * kCroppedFrameDataSize);
+      std::copy(frame_data->begin(), frame_data->end(),
+          frames_input.begin() + i * kInputDataSize + j * kCroppedFrameDataSize);
     }
   }
+  //std::cout << std::endl;
+
   InputDataIntoLayers(frames_input, target_input, filter_input);
+  //net_->ForwardPrefilled();
+  //std::cout << "ip2-before:" << net_->blob_by_name("ip2")->data_at(1, 0, 0, 0) << std::endl;
   solver_->Step(1);
+
+  //std::cout << "ip2-after:" << net_->blob_by_name("ip2")->data_at(1, 0, 0, 0) << std::endl;
   // Log the first parameter of each hidden layer
-  VLOG(1) << "conv1:" <<
-      net_->layer_by_name("conv1_layer")->blobs().front()->data_at(1, 0, 0, 0);
-  VLOG(1) << "conv2:" <<
-      net_->layer_by_name("conv2_layer")->blobs().front()->data_at(1, 0, 0, 0);
-  VLOG(1) << "ip1:" <<
-      net_->layer_by_name("ip1_layer")->blobs().front()->data_at(1, 0, 0, 0);
-  VLOG(1) << "ip2:" <<
-      net_->layer_by_name("ip2_layer")->blobs().front()->data_at(1, 0, 0, 0);
+  //VLOG(1) << "conv1:" << net_->layer_by_name("conv1_layer")->blobs().front()->data_at(1, 0, 0, 0);
+  //VLOG(1) << "conv2:" << net_->layer_by_name("conv2_layer")->blobs().front()->data_at(1, 0, 0, 0);
+  //VLOG(1) << "ip1:" << net_->layer_by_name("ip1_layer")->blobs().front()->data_at(1, 0, 0, 0);
+  //VLOG(1) << "ip2:" << net_->layer_by_name("ip2_layer")->blobs().front()->data_at(1, 0, 0, 0);
 }
 
 void DQN::InputDataIntoLayers(

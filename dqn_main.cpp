@@ -3,7 +3,7 @@
 #include "ale_interface.hpp"
 #include <glog/logging.h>
 #include <gflags/gflags.h>
-#include "prettyprint.hpp"
+//#include "prettyprint.hpp"
 #include "dqn.hpp"
 
 using namespace ale;
@@ -92,6 +92,7 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
   google::LogToStderr();
+  FLAGS_alsologtostderr = 1;
 
   if (FLAGS_gpu) {
     caffe::Caffe::set_mode(caffe::Caffe::GPU);
